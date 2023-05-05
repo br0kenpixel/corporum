@@ -1,7 +1,5 @@
 use crate::schema::Sentence;
-use crate::schema::SentenceType;
 use crate::schema::Token;
-use crate::schema::Translation;
 
 impl Sentence {
     pub fn new(id: u32, lang: &str) -> Sentence {
