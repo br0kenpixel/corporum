@@ -1,10 +1,4 @@
-use crate::schema::Metadata;
-
 use crate::schema::Corpus;
-use rmp_serde;
-use serde_cbor::de::from_slice;
-use serde_cbor::ser::{to_vec, to_vec_packed};
-use serde_json;
 use std::{ffi::OsStr, fs, io::Write, path::Path};
 
 const JSON: &str = "json";
@@ -24,28 +18,26 @@ impl Corporeum<'_> {
 
         Corporeum {
             original_file_path: buffer,
-            corpus: corpus,
+            corpus,
         }
     }
 
     // function to load an already existing corpus
     pub fn load<P: AsRef<Path>>(source: &P) -> Corporeum {
-        let mut data: String = String::new();
-        if source.as_ref().is_file() {
+        let data = if source.as_ref().is_file() {
             // FIXME error handling
-            data = fs::read_to_string(source).expect("Unable to read file");
+            fs::read_to_string(source).expect("Unable to read file")
         } else {
             panic!("Not a file");
-        }
+        };
 
         // parse json file
-        let mut corpus: Corpus = match source.as_ref().extension().and_then(OsStr::to_str).unwrap()
-        {
+        let corpus: Corpus = match source.as_ref().extension().and_then(OsStr::to_str).unwrap() {
             JSON => serde_json::from_str(&data).unwrap(),
-            PICKLE => serde_pickle::from_slice(&data.as_bytes(), Default::default()).unwrap(),
-            MSGPACK => rmp_serde::from_slice(&data.as_bytes()).unwrap(),
-            CBOR => serde_cbor::from_slice(&data.as_bytes()).unwrap(),
-            BINCODE => bincode::deserialize(&data.as_bytes()).unwrap(),
+            PICKLE => serde_pickle::from_slice(data.as_bytes(), Default::default()).unwrap(),
+            MSGPACK => rmp_serde::from_slice(data.as_bytes()).unwrap(),
+            CBOR => serde_cbor::from_slice(data.as_bytes()).unwrap(),
+            BINCODE => bincode::deserialize(data.as_bytes()).unwrap(),
             _ => panic!("Unsupported file format"),
         };
         // let mut corpus: Corpus = serde_json::from_str(&data).unwrap();
@@ -60,7 +52,7 @@ impl Corporeum<'_> {
 
         Corporeum {
             original_file_path: source.as_ref(),
-            corpus: corpus,
+            corpus,
         }
     }
 
@@ -131,7 +123,7 @@ impl Corporeum<'_> {
         let destination = destination.as_ref();
 
         if destination.is_file() {
-            let dest = Path::with_extension(&destination, PICKLE);
+            let dest = Path::with_extension(destination, PICKLE);
             let dest = dest.as_path();
             let file = fs::OpenOptions::new()
                 .write(true)
@@ -164,7 +156,7 @@ impl Corporeum<'_> {
         let destination = destination.as_ref();
 
         if destination.is_file() {
-            let dest = Path::with_extension(&destination, MSGPACK);
+            let dest = Path::with_extension(destination, MSGPACK);
             let dest = dest.as_path();
 
             let file = fs::OpenOptions::new()
@@ -206,7 +198,7 @@ impl Corporeum<'_> {
         let destination = destination.as_ref();
 
         if destination.is_file() {
-            let dest = Path::with_extension(&destination, CBOR);
+            let dest = Path::with_extension(destination, CBOR);
             let dest = dest.as_path();
 
             let file = fs::OpenOptions::new()
@@ -240,7 +232,7 @@ impl Corporeum<'_> {
         let destination = destination.as_ref();
 
         if destination.is_file() {
-            let dest = Path::with_extension(&destination, BINCODE);
+            let dest = Path::with_extension(destination, BINCODE);
             let dest = dest.as_path();
 
             let file = fs::OpenOptions::new()
