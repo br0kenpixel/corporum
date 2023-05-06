@@ -1,4 +1,5 @@
 use crate::schema::Corpus;
+use serde_pickle::{DeOptions, SerOptions};
 use std::{ffi::OsStr, fs, io::Write, path::Path};
 
 const JSON: &str = "json";
@@ -34,7 +35,7 @@ impl Corporeum<'_> {
         // parse json file
         let corpus: Corpus = match source.as_ref().extension().and_then(OsStr::to_str).unwrap() {
             JSON => serde_json::from_str(&data).unwrap(),
-            PICKLE => serde_pickle::from_slice(data.as_bytes(), Default::default()).unwrap(),
+            PICKLE => serde_pickle::from_slice(data.as_bytes(), DeOptions::default()).unwrap(),
             MSGPACK => rmp_serde::from_slice(data.as_bytes()).unwrap(),
             CBOR => serde_cbor::from_slice(data.as_bytes()).unwrap(),
             BINCODE => bincode::deserialize(data.as_bytes()).unwrap(),
@@ -103,7 +104,7 @@ impl Corporeum<'_> {
     }
 
     pub fn save_pickle(&self) {
-        let buffer = serde_pickle::to_vec(&self.corpus, Default::default()).unwrap();
+        let buffer = serde_pickle::to_vec(&self.corpus, SerOptions::default()).unwrap();
 
         let dest = Path::with_extension(self.original_file_path, PICKLE);
         let dest = dest.as_path();
@@ -118,7 +119,7 @@ impl Corporeum<'_> {
     }
 
     pub fn save_as_pickle<P: AsRef<Path>>(&self, destination: &P) {
-        let buffer = serde_pickle::to_vec(&self.corpus, Default::default()).unwrap();
+        let buffer = serde_pickle::to_vec(&self.corpus, SerOptions::default()).unwrap();
 
         let destination = destination.as_ref();
 
@@ -245,7 +246,7 @@ impl Corporeum<'_> {
         }
     }
 
-    pub fn corpus(&self) -> &Corpus {
+    pub const fn corpus(&self) -> &Corpus {
         &self.corpus
     }
 
