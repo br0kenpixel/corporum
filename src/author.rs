@@ -1,6 +1,7 @@
 use crate::schema::Author;
 
 impl Author {
+    /// Creates a new `Author`.
     pub fn new(first_name: &str, last_name: &str, mail: Option<&str>) -> Self {
         Self {
             first_name: first_name.to_owned(),
