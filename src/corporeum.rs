@@ -2,16 +2,21 @@ use crate::{
     macros::{create_file, into_stderr, stderr_with_message},
     schema::Corpus,
 };
-use std::{ffi::OsStr, fs, io::Write, path::Path};
+use std::{
+    ffi::OsStr,
+    fs,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 pub const FILE_EXT: &str = "corp";
 
-pub struct Corporeum<'a> {
-    original_file_path: &'a Path,
+pub struct Corporeum {
+    original_file_path: PathBuf,
     corpus: Corpus,
 }
 
-impl Corporeum<'_> {
+impl Corporeum {
     /// Creates a new empty [`Corporeum`](Corporeum).
     ///
     /// After modifying the [`Corpus`](Corpus), you can use [`save()`](Self::save)
@@ -20,7 +25,7 @@ impl Corporeum<'_> {
         let corpus = Corpus::default();
 
         Corporeum {
-            original_file_path: buffer,
+            original_file_path: buffer.to_path_buf(),
             corpus,
         }
     }
@@ -32,7 +37,9 @@ impl Corporeum<'_> {
     /// returned.
     /// - If the `source` file cannot be opened, an error is returned.
     /// - Lastly, an error shall be returned if the deserialization fails.
-    pub fn load(source: &Path) -> std::io::Result<Corporeum> {
+    pub fn load<P: AsRef<Path>>(source: P) -> std::io::Result<Corporeum> {
+        let source = source.as_ref();
+
         if source.extension().and_then(OsStr::to_str).unwrap() != FILE_EXT {
             return Err(stderr_with_message!("Invalid file extension"));
         }
@@ -44,7 +51,7 @@ impl Corporeum<'_> {
         let corpus: Corpus = bincode::deserialize(&data).unwrap();
 
         Ok(Corporeum {
-            original_file_path: source,
+            original_file_path: source.to_path_buf(),
             corpus,
         })
     }
@@ -58,20 +65,16 @@ impl Corporeum<'_> {
     /// - The destination file could not be opened
     /// - An error occurred while writing to the file.
     pub fn save(&self) -> std::io::Result<()> {
-        let buffer = into_stderr!(bincode::serialize(&self.corpus))?;
-        let dest = self.original_file_path.with_extension(FILE_EXT);
-        let mut file = create_file!(dest)?;
-
-        file.write_all(&buffer)
+        self.save_as(&self.original_file_path)
     }
 
     /// Saves the current instance into the specified file.
     ///
     /// # Errors
     /// Same as [save()](Self::save).
-    pub fn save_as(&self, path: &Path) -> std::io::Result<()> {
+    pub fn save_as<P: AsRef<Path>>(&self, path: &P) -> std::io::Result<()> {
         let buffer = into_stderr!(bincode::serialize(&self.corpus))?;
-        let dest = path.with_extension(FILE_EXT);
+        let dest = path.as_ref().with_extension(FILE_EXT);
         let mut file = create_file!(dest)?;
 
         file.write_all(&buffer)

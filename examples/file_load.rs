@@ -1,5 +1,5 @@
 use corporum::Corporeum;
-use std::{env::args, path::PathBuf, process::exit};
+use std::{env::args, process::exit};
 
 fn main() {
     let args: Vec<String> = args().collect();
@@ -10,5 +10,5 @@ fn main() {
         exit(1);
     };
 
-    let _corp = Corporeum::load(&PathBuf::from(file)).unwrap();
+    let _corp = Corporeum::load(file).unwrap();
 }
