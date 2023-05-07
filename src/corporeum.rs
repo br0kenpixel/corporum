@@ -37,8 +37,11 @@ impl Corporeum<'_> {
             return Err(stderr_with_message!("Invalid file extension"));
         }
 
-        let file = fs::OpenOptions::new().read(true).open(source)?;
-        let corpus: Corpus = into_stderr!(bincode::deserialize_from(file))?;
+        /* let file = fs::OpenOptions::new().read(true).open(source)?;
+        let corpus: Corpus = into_stderr!(bincode::deserialize_from(file))?; */
+
+        let data = fs::read(source).unwrap();
+        let corpus: Corpus = bincode::deserialize(&data).unwrap();
 
         Ok(Corporeum {
             original_file_path: source,
