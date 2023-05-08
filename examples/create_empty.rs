@@ -1,10 +1,9 @@
 use corporum::Corporeum;
-use std::path::PathBuf;
 
 fn main() {
-    let path = PathBuf::from("test.corp");
+    const PATH: &str = "test.corp";
     {
-        let mut corp = Corporeum::new(&path);
+        let mut corp = Corporeum::new(PATH);
         let mut doc = corp.corpus_mut().create_doc();
         let mut sent = doc.create_sentence("en");
         let tok = sent.create_token("hello");
@@ -16,6 +15,6 @@ fn main() {
     }
 
     {
-        let _corp = Corporeum::load(&path).unwrap();
+        let _corp = Corporeum::load(PATH).unwrap();
     }
 }

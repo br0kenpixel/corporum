@@ -21,11 +21,11 @@ impl Corporeum {
     ///
     /// After modifying the [`Corpus`](Corpus), you can use [`save()`](Self::save)
     /// to save it into a file (`buffer`), which can be later loaded with [`load()`](Self::load).  
-    pub fn new(buffer: &Path) -> Corporeum {
+    pub fn new<P: AsRef<Path>>(buffer: P) -> Corporeum {
         let corpus = Corpus::default();
 
         Corporeum {
-            original_file_path: buffer.to_path_buf(),
+            original_file_path: buffer.as_ref().to_path_buf(),
             corpus,
         }
     }
