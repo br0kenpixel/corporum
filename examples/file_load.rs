@@ -10,5 +10,7 @@ fn main() {
         exit(1);
     };
 
-    let _corp = Corporeum::load(file).unwrap();
+    let corp = Corporeum::load(file).unwrap();
+    println!("{:?}", corp.corpus());
+    //corp.save_as(&"test").unwrap();
 }

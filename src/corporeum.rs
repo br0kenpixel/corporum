@@ -2,10 +2,11 @@ use crate::{
     macros::{create_file, into_stderr},
     schema::Corpus,
 };
+use lzma_rs::lzma_decompress;
 use rkyv::Deserialize;
 use std::{
     fs,
-    io::Cursor,
+    io::{BufReader, Cursor},
     path::{Path, PathBuf},
 };
 
@@ -39,7 +40,15 @@ impl Corporeum {
     /// - Lastly, an error shall be returned if the deserialization fails.
     pub fn load<P: AsRef<Path>>(source: P) -> std::io::Result<Self> {
         let source = source.as_ref();
-        let data = fs::read(source)?;
+        let mut data = Vec::new();
+        let mut file = BufReader::new(fs::OpenOptions::new().read(true).open(source)?);
+
+        {
+            let mut data_cursor = Cursor::new(&mut data);
+            //file.read_to_end(&mut data)?;
+            into_stderr!(lzma_decompress(&mut file, &mut data_cursor))?;
+        }
+
         // TODO: Use safe api instead
         let archived = unsafe { rkyv::archived_root::<Corpus>(&data[..]) };
         let corpus = into_stderr!(archived.deserialize(&mut rkyv::Infallible))?;
@@ -72,7 +81,7 @@ impl Corporeum {
 
         let dest = path.as_ref().with_extension(FILE_EXT);
         let mut file = create_file!(dest)?;
-        lzma_rs::xz_compress(&mut cursor, &mut file)
+        lzma_rs::lzma_compress(&mut cursor, &mut file)
     }
 
     /// Returns a reference to the [Corpus](Corpus).
