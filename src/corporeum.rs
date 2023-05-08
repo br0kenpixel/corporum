@@ -1,15 +1,15 @@
 use crate::{
-    macros::{create_file, into_stderr, stderr_with_message},
+    macros::{create_file, into_stderr},
     schema::Corpus,
 };
+use rkyv::Deserialize;
 use std::{
-    ffi::OsStr,
     fs,
-    io::Write,
+    io::Cursor,
     path::{Path, PathBuf},
 };
 
-pub const FILE_EXT: &str = "corp";
+pub const FILE_EXT: &str = "rkyv.lzma";
 
 pub struct Corporeum {
     original_file_path: PathBuf,
@@ -39,13 +39,10 @@ impl Corporeum {
     /// - Lastly, an error shall be returned if the deserialization fails.
     pub fn load<P: AsRef<Path>>(source: P) -> std::io::Result<Self> {
         let source = source.as_ref();
-
-        if source.extension().and_then(OsStr::to_str).unwrap() != FILE_EXT {
-            return Err(stderr_with_message!("Invalid file extension"));
-        }
-
-        let file = fs::OpenOptions::new().read(true).open(source)?;
-        let corpus: Corpus = into_stderr!(bincode::deserialize_from(file))?;
+        let data = fs::read(source)?;
+        // TODO: Use safe api instead
+        let archived = unsafe { rkyv::archived_root::<Corpus>(&data[..]) };
+        let corpus = into_stderr!(archived.deserialize(&mut rkyv::Infallible))?;
 
         Ok(Self {
             original_file_path: source.to_path_buf(),
@@ -70,11 +67,12 @@ impl Corporeum {
     /// # Errors
     /// Same as [save()](Self::save).
     pub fn save_as<P: AsRef<Path>>(&self, path: &P) -> std::io::Result<()> {
-        let buffer = into_stderr!(bincode::serialize(&self.corpus))?;
+        let buffer = rkyv::to_bytes::<_, 1024>(self.corpus()).unwrap();
+        let mut cursor = Cursor::new(buffer);
+
         let dest = path.as_ref().with_extension(FILE_EXT);
         let mut file = create_file!(dest)?;
-
-        file.write_all(&buffer)
+        lzma_rs::xz_compress(&mut cursor, &mut file)
     }
 
     /// Returns a reference to the [Corpus](Corpus).

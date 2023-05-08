@@ -1,7 +1,8 @@
 use corporum::Corporeum;
 
 fn main() {
-    const PATH: &str = "test.corp";
+    const PATH: &str = "test";
+    const LOAD_PATH: &str = "test.rkyv.lzma";
     {
         let mut corp = Corporeum::new(PATH);
         let mut doc = corp.corpus_mut().create_doc();
@@ -15,6 +16,6 @@ fn main() {
     }
 
     {
-        let _corp = Corporeum::load(PATH).unwrap();
+        let _corp = Corporeum::load(LOAD_PATH).unwrap();
     }
 }
