@@ -17,14 +17,14 @@ pub struct Corporeum {
 }
 
 impl Corporeum {
-    /// Creates a new empty [`Corporeum`](Corporeum).
+    /// Creates a new empty [`Corporeum`](Self).
     ///
     /// After modifying the [`Corpus`](Corpus), you can use [`save()`](Self::save)
     /// to save it into a file (`buffer`), which can be later loaded with [`load()`](Self::load).  
-    pub fn new<P: AsRef<Path>>(buffer: P) -> Corporeum {
+    pub fn new<P: AsRef<Path>>(buffer: P) -> Self {
         let corpus = Corpus::default();
 
-        Corporeum {
+        Self {
             original_file_path: buffer.as_ref().to_path_buf(),
             corpus,
         }
@@ -37,7 +37,7 @@ impl Corporeum {
     /// returned.
     /// - If the `source` file cannot be opened, an error is returned.
     /// - Lastly, an error shall be returned if the deserialization fails.
-    pub fn load<P: AsRef<Path>>(source: P) -> std::io::Result<Corporeum> {
+    pub fn load<P: AsRef<Path>>(source: P) -> std::io::Result<Self> {
         let source = source.as_ref();
 
         if source.extension().and_then(OsStr::to_str).unwrap() != FILE_EXT {
@@ -47,13 +47,13 @@ impl Corporeum {
         let file = fs::OpenOptions::new().read(true).open(source)?;
         let corpus: Corpus = into_stderr!(bincode::deserialize_from(file))?;
 
-        Ok(Corporeum {
+        Ok(Self {
             original_file_path: source.to_path_buf(),
             corpus,
         })
     }
 
-    /// Saves the current instance into the file from which the [`Corporeum`](Corporeum)
+    /// Saves the current instance into the file from which the [`Corporeum`](Self)
     /// was created from.
     ///
     /// # Errors
