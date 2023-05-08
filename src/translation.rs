@@ -7,13 +7,12 @@ impl Translation {
     }
 
     #[allow(unused)]
-    pub fn new(id: u32, tokens: &Vec<&str>, lang: &str, sent_type: SentenceType) -> Self {
-        let mut words: Vec<Token> = Vec::with_capacity(tokens.len());
-
-        for (i, token) in tokens.iter().enumerate() {
-            let t = Token::new(i as u32, token);
-            words.push(t);
-        }
+    pub fn new(id: u32, tokens: &[&str], lang: &str, sent_type: SentenceType) -> Self {
+        let words = tokens
+            .iter()
+            .enumerate()
+            .map(|(i, token)| Token::new(i as u32, token))
+            .collect();
 
         Self {
             lang: lang.to_string(),
