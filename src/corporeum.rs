@@ -2,15 +2,15 @@ use crate::{
     macros::{create_file, into_stderr},
     schema::Corpus,
 };
-use lzma_rs::lzma_decompress;
+use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use rkyv::Deserialize;
 use std::{
     fs,
-    io::{BufReader, Cursor},
+    io::{Read, Write},
     path::{Path, PathBuf},
 };
 
-pub const FILE_EXT: &str = "rkyv.lzma";
+pub const FILE_EXT: &str = "rkyv.gz";
 
 pub struct Corporeum {
     original_file_path: PathBuf,
@@ -41,12 +41,11 @@ impl Corporeum {
     pub fn load<P: AsRef<Path>>(source: P) -> std::io::Result<Self> {
         let source = source.as_ref();
         let mut data = Vec::new();
-        let mut file = BufReader::new(fs::OpenOptions::new().read(true).open(source)?);
+        let file = fs::OpenOptions::new().read(true).open(source)?;
 
         {
-            let mut data_cursor = Cursor::new(&mut data);
-            //file.read_to_end(&mut data)?;
-            into_stderr!(lzma_decompress(&mut file, &mut data_cursor))?;
+            let mut decompressor = GzDecoder::new(file);
+            decompressor.read_to_end(&mut data)?;
         }
 
         // TODO: Use safe api instead
@@ -77,11 +76,11 @@ impl Corporeum {
     /// Same as [save()](Self::save).
     pub fn save_as<P: AsRef<Path>>(&self, path: &P) -> std::io::Result<()> {
         let buffer = rkyv::to_bytes::<_, 1024>(self.corpus()).unwrap();
-        let mut cursor = Cursor::new(buffer);
 
         let dest = path.as_ref().with_extension(FILE_EXT);
-        let mut file = create_file!(dest)?;
-        lzma_rs::lzma_compress(&mut cursor, &mut file)
+        let file = create_file!(dest)?;
+        let mut compressor = GzEncoder::new(file, Compression::best());
+        compressor.write_all(&buffer)
     }
 
     /// Returns a reference to the [Corpus](Corpus).

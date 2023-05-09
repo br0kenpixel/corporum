@@ -6,4 +6,4 @@ authors = ["Fero Forgac <fero4gac@protonmail.com>"]
 
 [dependencies]
 rkyv = "0.7.41"
-lzma-rs = "0.3.0"
+flate2 = "1.0.26"
